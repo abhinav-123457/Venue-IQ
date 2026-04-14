@@ -124,9 +124,9 @@ export default function ChatAssistant() {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col" role="region" aria-label="AI Chat Assistant">
       {/* Messages — centered container on desktop */}
-      <div ref={listRef} className="flex-1 overflow-y-auto">
+      <div ref={listRef} className="flex-1 overflow-y-auto" role="log" aria-label="Chat messages" aria-live="polite">
         <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 space-y-4">
           <AnimatePresence mode="popLayout">
             {messages.map((msg) => (
@@ -159,7 +159,7 @@ export default function ChatAssistant() {
 
           {/* Loading indicator */}
           {loading && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-3">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-3" role="status" aria-label="AI is thinking">
               <div className="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mt-0.5 shadow-lg shadow-blue-500/10">
                 <Bot size={15} className="text-white" />
               </div>
@@ -180,10 +180,10 @@ export default function ChatAssistant() {
             exit={{ opacity: 0, height: 0 }}
             className="max-w-2xl mx-auto w-full px-4 md:px-6"
           >
-            <div className="flex items-center justify-between gap-2 rounded-xl bg-red-500/10 border border-red-500/10 px-4 py-2.5 mb-2">
+            <div className="flex items-center justify-between gap-2 rounded-xl bg-red-500/10 border border-red-500/10 px-4 py-2.5 mb-2" role="alert">
               <span className="text-xs text-red-400">{errorBanner}</span>
-              <button onClick={() => setErrorBanner(null)} className="text-red-400/60 hover:text-red-300">
-                <X size={14} />
+              <button onClick={() => setErrorBanner(null)} className="text-red-400/60 hover:text-red-300" aria-label="Dismiss error">
+                <X size={14} aria-hidden="true" />
               </button>
             </div>
           </motion.div>
@@ -211,8 +211,10 @@ export default function ChatAssistant() {
       <div className="border-t border-white/[0.04] bg-[#0a0a0a]/80 backdrop-blur-xl">
         <div className="max-w-2xl mx-auto px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center gap-3 bg-[#111111] border border-white/[0.06] rounded-2xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500/15 transition-all duration-200">
-            <Sparkles size={16} className="text-slate-600 shrink-0" />
+            <Sparkles size={16} className="text-slate-600 shrink-0" aria-hidden="true" />
+            <label htmlFor="chat-input" className="sr-only">Ask about the venue</label>
             <input
+              id="chat-input"
               ref={inputRef}
               type="text"
               value={input}
@@ -220,13 +222,15 @@ export default function ChatAssistant() {
               onKeyDown={handleKeyDown}
               placeholder="Ask about the venue..."
               className="flex-1 bg-transparent text-sm text-white placeholder-slate-600 outline-none"
+              autoComplete="off"
             />
             <button
               onClick={() => sendMessage(input)}
               disabled={loading || !input.trim()}
+              aria-label="Send message"
               className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-blue-600 text-white disabled:opacity-20 disabled:cursor-not-allowed hover:bg-blue-500 transition-all duration-200"
             >
-              <Send size={15} />
+              <Send size={15} aria-hidden="true" />
             </button>
           </div>
         </div>

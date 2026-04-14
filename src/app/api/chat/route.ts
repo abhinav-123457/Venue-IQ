@@ -1,9 +1,27 @@
+import { NextResponse } from 'next/server'
 import { callGroq } from '@/lib/groq'
 import { aiLimiter, globalLimiter } from '@/lib/ratelimit'
-import { ChatMessage } from '@/lib/types'
+import type { ChatMessage } from '@/lib/types'
 
+/** Maximum allowed values for input validation */
+const MAX_MESSAGES = 15
+const MAX_MESSAGE_LENGTH = 600
+const MAX_SYSTEM_PROMPT_LENGTH = 2000
+
+/**
+ * Strips HTML tags from a string to prevent XSS in stored/reflected content.
+ */
+function sanitize(input: string): string {
+  return input.replace(/<[^>]*>/g, '').trim()
+}
+
+/**
+ * POST /api/chat
+ * Accepts user chat messages, validates & sanitizes input,
+ * applies rate limiting, and returns an AI-generated reply via Groq.
+ */
 export async function POST(req: Request) {
-  // 1. Get IP
+  // 1. Extract client IP for rate limiting
   const forwarded = req.headers.get('x-forwarded-for')
   const ip = forwarded
     ? forwarded.split(',')[0].trim()
@@ -11,44 +29,66 @@ export async function POST(req: Request) {
 
   // 2. Global rate limit
   const global = await globalLimiter.limit(ip)
-  if (!global.success)
-    return Response.json({ error: 'Too many requests.' }, { status: 429 })
-
-  // 3. AI rate limit
-  const ai = await aiLimiter.limit(ip)
-  if (!ai.success)
-    return Response.json(
-      { error: 'AI limit reached. Wait a moment.' },
-      { status: 429 }
+  if (!global.success) {
+    return NextResponse.json(
+      { error: 'Too many requests.' },
+      { status: 429, headers: { 'Retry-After': '60' } }
     )
+  }
 
-  // 4. Parse body
-  const body = await req.json()
+  // 3. AI-specific rate limit
+  const ai = await aiLimiter.limit(ip)
+  if (!ai.success) {
+    return NextResponse.json(
+      { error: 'AI limit reached. Wait a moment.' },
+      { status: 429, headers: { 'Retry-After': '30' } }
+    )
+  }
+
+  // 4. Parse and validate request body
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+
   const { messages, systemPrompt } = body as {
     messages: ChatMessage[]
     systemPrompt: string
   }
 
-  // 5. Validate
   if (
     !Array.isArray(messages) ||
     messages.length < 1 ||
-    messages.length > 15 ||
+    messages.length > MAX_MESSAGES ||
     messages.some(
-      (m) => typeof m.content !== 'string' || m.content.length > 600
+      (m) =>
+        typeof m.content !== 'string' ||
+        m.content.length > MAX_MESSAGE_LENGTH ||
+        !['user', 'assistant'].includes(m.role)
     ) ||
     typeof systemPrompt !== 'string' ||
-    systemPrompt.length > 2000
+    systemPrompt.length > MAX_SYSTEM_PROMPT_LENGTH
   ) {
-    return Response.json({ error: 'Invalid input' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
   }
 
-  // 6. Call Groq
+  // 5. Sanitize all user-provided content
+  const sanitizedMessages: ChatMessage[] = messages.map((m) => ({
+    ...m,
+    content: sanitize(m.content),
+  }))
+
+  // 6. Call Groq AI
   try {
-    const reply = await callGroq(messages, systemPrompt)
-    return Response.json({ reply }, { status: 200 })
+    const reply = await callGroq(sanitizedMessages, systemPrompt)
+    return NextResponse.json({ reply }, { status: 200 })
   } catch (err) {
-    console.error('[/api/chat error]', err)
-    return Response.json({ error: 'Something went wrong' }, { status: 500 })
+    console.error('[/api/chat error]', err instanceof Error ? err.message : err)
+    return NextResponse.json(
+      { error: 'Something went wrong' },
+      { status: 500 }
+    )
   }
 }
