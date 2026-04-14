@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['192.168.29.210'],
+  poweredByHeader: false,
 
   /** Security and performance headers applied to all routes */
   async headers() {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import ReactMarkdown from 'react-markdown'
 import { useVenueStore } from '@/lib/store'
 import { buildSystemPrompt } from '@/lib/venueData'
 import { ChatMessage } from '@/lib/types'
@@ -147,11 +148,26 @@ export default function ChatAssistant() {
                 <div
                   className={`max-w-[85%] md:max-w-[75%] px-4 py-3 text-sm leading-relaxed ${
                     msg.role === 'user'
-                      ? 'bg-blue-600 text-white rounded-2xl rounded-br-md'
+                      ? 'bg-blue-600 text-white rounded-2xl rounded-br-md whitespace-pre-wrap'
                       : 'bg-[#111111] border border-white/[0.04] text-slate-200 rounded-2xl rounded-bl-md'
                   }`}
                 >
-                  {msg.content}
+                  {msg.role === 'assistant' ? (
+                    <ReactMarkdown
+                      components={{
+                        strong: ({ node, ...props }) => <strong className="font-semibold text-white" {...props} />,
+                        p: ({ node, ...props }) => <p className="mb-2 last:mb-0 whitespace-pre-wrap" {...props} />,
+                        ul: ({ node, ...props }) => <ul className="list-disc pl-4 mb-2 space-y-1" {...props} />,
+                        ol: ({ node, ...props }) => <ol className="list-decimal pl-4 mb-2 space-y-1" {...props} />,
+                        li: ({ node, ...props }) => <li className="marker:text-slate-500" {...props} />,
+                        a: ({ node, ...props }) => <a className="text-blue-400 hover:underline hover:text-blue-300 transition-colors" {...props} />
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  ) : (
+                    msg.content
+                  )}
                 </div>
               </motion.div>
             ))}

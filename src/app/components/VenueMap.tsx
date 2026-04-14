@@ -48,19 +48,25 @@ export default function VenueMap() {
   const overlaysRef = useRef<google.maps.Circle[]>([])
 
   const [mapReady, setMapReady] = useState(false)
-  const [noGoogle, setNoGoogle] = useState(false)
+  const [noGoogle, setNoGoogle] = useState(() => typeof window === 'undefined' ? false : !window.google)
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all')
   const [selectedZone, setSelectedZone] = useState<Zone | null>(null)
   const [navTarget, setNavTarget] = useState<Zone | null>(null)
 
+  // Wait for Google Maps script
+  useEffect(() => {
+    const checkGoogle = setInterval(() => {
+      if (window.google) {
+        setNoGoogle(false)
+        clearInterval(checkGoogle)
+      }
+    }, 100)
+    return () => clearInterval(checkGoogle)
+  }, [])
+
   // Initialize map with HYBRID
   useEffect(() => {
-    if (!window.google) {
-      setNoGoogle(true)
-      return
-    }
-
-    if (!mapContainerRef.current || mapRef.current) return
+    if (noGoogle || !window.google || !mapContainerRef.current || mapRef.current) return
 
     mapRef.current = new google.maps.Map(mapContainerRef.current, {
       center: { lat: 28.6145, lng: 77.2090 },
@@ -75,8 +81,9 @@ export default function VenueMap() {
       tilt: 0,
     })
 
-    setMapReady(true)
-  }, [])
+    setTimeout(() => setMapReady(true), 0)
+     
+  }, [noGoogle])
 
   // Render markers
   const renderMarkers = useCallback(() => {

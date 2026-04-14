@@ -58,13 +58,13 @@ export default function HomeTab() {
       badge: true,
     },
     {
-      icon: Utensils, label: 'Best Food', value: bestFood.name,
-      sub: `${bestFood.waitMinutes} min wait`, subColor: getCrowdColor(bestFood.crowdLevel),
+      icon: Utensils, label: 'Best Food', value: bestFood ? bestFood.name : 'N/A',
+      sub: bestFood ? `${bestFood.waitMinutes} min wait` : 'N/A', subColor: bestFood ? getCrowdColor(bestFood.crowdLevel) : '#94a3b8',
       accent: 'text-emerald-400', bg: 'bg-emerald-500/8',
     },
     {
-      icon: DoorOpen, label: 'Best Exit', value: bestGate.name,
-      sub: `${bestGate.waitMinutes} min wait`, subColor: getCrowdColor(bestGate.crowdLevel),
+      icon: DoorOpen, label: 'Best Exit', value: bestGate ? bestGate.name : 'N/A',
+      sub: bestGate ? `${bestGate.waitMinutes} min wait` : 'N/A', subColor: bestGate ? getCrowdColor(bestGate.crowdLevel) : '#94a3b8',
       accent: 'text-cyan-400', bg: 'bg-cyan-500/8',
     },
   ]
@@ -225,25 +225,26 @@ export default function HomeTab() {
                     <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">{item.label}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-bold text-white">{item.zone.name}</p>
-                    {item.zone.accessible && accessibilityMode && (
+                    <p className="text-sm font-bold text-white">{item.zone ? item.zone.name : 'N/A'}</p>
+                    {item.zone && item.zone.accessible && accessibilityMode && (
                       <span className="text-[10px] text-blue-400">♿</span>
                     )}
                   </div>
                   <div className="flex items-center justify-between mt-1.5">
-                    <span className="text-[11px] font-medium" style={{ color: getCrowdColor(item.zone.crowdLevel) }}>
-                      {item.zone.waitMinutes} min
+                    <span className="text-[11px] font-medium" style={{ color: item.zone ? getCrowdColor(item.zone.crowdLevel) : '#64748b' }}>
+                      {item.zone ? `${item.zone.waitMinutes} min` : 'N/A'}
                     </span>
                     <span
-                      className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${getCrowdBg(item.zone.crowdLevel)}`}
+                      className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${item.zone ? getCrowdBg(item.zone.crowdLevel) : 'bg-slate-500/20 text-slate-400'}`}
                     >
-                      {item.zone.crowdLevel}
+                      {item.zone ? item.zone.crowdLevel : 'N/A'}
                     </span>
                   </div>
                   {/* Navigate button */}
                   <button
-                    onClick={() => setNavTarget(item.zone)}
-                    className="mt-2.5 w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.04] text-[10px] font-semibold text-slate-400 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.08] transition-all duration-200"
+                    onClick={() => item.zone && setNavTarget(item.zone)}
+                    disabled={!item.zone}
+                    className="mt-2.5 w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.04] text-[10px] font-semibold text-slate-400 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.08] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Navigation size={10} />
                     Navigate

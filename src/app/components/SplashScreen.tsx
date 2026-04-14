@@ -232,7 +232,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
                 color: 'rgba(139,144,160,0.5)',
               }}
             >
-              v1.0 — Powered by Groq AI
+              v1.0 — Powered by Google Gemini
             </p>
           </motion.div>
         </motion.div>

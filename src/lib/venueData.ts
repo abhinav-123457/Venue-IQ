@@ -43,8 +43,9 @@ export function getCrowdBg(level: CrowdLevel): string {
   }
 }
 
-export function getBestZoneByType(zones: Zone[], type: ZoneType): Zone {
+export function getBestZoneByType(zones: Zone[], type: ZoneType): Zone | null {
   const filtered = zones.filter((z) => z.type === type)
+  if (filtered.length === 0) return null
   return filtered.reduce((best, zone) =>
     zone.waitMinutes < best.waitMinutes ? zone : best
   )
@@ -167,28 +168,30 @@ export function getPersonalizedInfo(
     tips.push(`✅ ${nearestGate.name} is clear — ${nearestGate.waitMinutes} min wait.`)
   }
 
-  if (nearestFood.crowdLevel === 'high') {
+  if (nearestFood && nearestFood.crowdLevel === 'high') {
     const altFood = zones
-      .filter((z) => z.type === 'food' && z.id !== nearestFood.id && (!accessibilityMode || z.accessible))
+      .filter((z) => z.type === 'food' && z.id !== nearestFood.id && (accessibilityMode ? z.accessible : true))
       .sort((a, b) => a.waitMinutes - b.waitMinutes)[0]
-    if (altFood) {
+    
+    if (altFood && altFood.crowdLevel !== 'high') {
       tips.push(`🍔 Food near you is packed. ${altFood.name} has a shorter queue (${altFood.waitMinutes}min).`)
     }
-  } else {
+  } else if (nearestFood) {
     tips.push(`🍔 ${nearestFood.name} has a ${nearestFood.waitMinutes} min wait.`)
   }
 
-  if (nearestRestroom.crowdLevel === 'high') {
+  if (nearestRestroom && nearestRestroom.crowdLevel === 'high') {
     const altRestroom = zones
-      .filter((z) => z.type === 'restroom' && z.id !== nearestRestroom.id && (!accessibilityMode || z.accessible))
+      .filter((z) => z.type === 'restroom' && z.id !== nearestRestroom.id && (accessibilityMode ? z.accessible : true))
       .sort((a, b) => a.waitMinutes - b.waitMinutes)[0]
-    if (altRestroom) {
+    
+    if (altRestroom && altRestroom.crowdLevel !== 'high') {
       tips.push(`🚻 Nearest restroom is busy. Head to ${altRestroom.name} (${altRestroom.waitMinutes}min wait).`)
     }
   }
 
   if (accessibilityMode) {
-    if (nearestRestroom.accessible) {
+    if (nearestRestroom && nearestRestroom.accessible) {
       tips.push(`♿ ${nearestRestroom.name} has wheelchair access.`)
     }
     if (nearestGate.accessible) {

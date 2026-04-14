@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { callGroq } from '@/lib/groq'
+import { callGemini } from '@/lib/gemini'
 import { aiLimiter, globalLimiter } from '@/lib/ratelimit'
 import type { ChatMessage } from '@/lib/types'
 
@@ -18,7 +18,7 @@ function sanitize(input: string): string {
 /**
  * POST /api/chat
  * Accepts user chat messages, validates & sanitizes input,
- * applies rate limiting, and returns an AI-generated reply via Groq.
+ * applies rate limiting, and returns an AI-generated reply via Gemini.
  */
 export async function POST(req: Request) {
   // 1. Extract client IP for rate limiting
@@ -80,9 +80,9 @@ export async function POST(req: Request) {
     content: sanitize(m.content),
   }))
 
-  // 6. Call Groq AI
+  // 6. Call Gemini AI
   try {
-    const reply = await callGroq(sanitizedMessages, systemPrompt)
+    const reply = await callGemini(sanitizedMessages, systemPrompt)
     return NextResponse.json({ reply }, { status: 200 })
   } catch (err) {
     console.error('[/api/chat error]', err instanceof Error ? err.message : err)

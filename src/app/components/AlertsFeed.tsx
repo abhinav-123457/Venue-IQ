@@ -142,7 +142,7 @@ export default function AlertsFeed() {
           <p className="text-xs text-slate-600 mt-1">New alerts will appear here</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3" aria-live="polite">
           <AnimatePresence mode="popLayout">
             {visibleAlerts.map((alert, index) => {
               const config = TYPE_CONFIG[alert.type]
