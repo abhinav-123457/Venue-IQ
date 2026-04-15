@@ -56,7 +56,7 @@ src/
 │   ├── store.ts                 # Zustand schema
 │   ├── venueData.ts             # Static topology matrices
 │   ├── types.ts                 # Core interface definitions
-│   ├── gemini.ts                # Gemini client singleton
+│   ├── gemini.ts                # Gemini client singleton for the gemini infrence
 │   └── ratelimit.ts             # Upstash throttler
 └── proxy.ts                     # Reverse proxy configs
 ```
